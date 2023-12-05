@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_pagination import add_pagination
 
 from app.auth.routers import auth
 from app.employee.routers import employee
@@ -66,3 +67,4 @@ async def log_requests_responses(request: Request, call_next):
 
 app.include_router(auth.router)
 app.include_router(employee.router)
+add_pagination(app)

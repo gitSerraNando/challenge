@@ -1,13 +1,11 @@
 from datetime import date
-
-from fastapi import HTTPException, status
-from google.api_core.exceptions import GoogleAPIError
 from google.cloud import bigquery
-from sqlalchemy.orm import Session
-
+from google.api_core.exceptions import GoogleAPIError
+from fastapi import HTTPException, status
 from app.monitor.repository.monitor import MonitorService
 from app.monitor.schema.monitor import LogCreate, LogsType
 from db.database import client
+from sqlalchemy.orm import Session
 
 
 class EmployeeService:
@@ -18,8 +16,7 @@ class EmployeeService:
     def sales_per_employee(self, key_employee: str, start_date: date, end_date: date):
         if start_date > end_date:
             log_data = LogCreate(
-                level=LogsType.WARNING,
-                message=f"Detail: sales_per_employee :The start date must be before the end date - Response: {status.HTTP_400_BAD_REQUEST}")
+                level=LogsType.WARNING, message=f"Detail: sales_per_employee :The start date must be before the end date - Response: {status.HTTP_400_BAD_REQUEST}")
             self.monitor_service.create_log(log_data)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

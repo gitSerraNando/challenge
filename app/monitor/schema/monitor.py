@@ -12,7 +12,7 @@ class LogsType(str, Enum):
 
 class LogCreate(BaseModel):
     level: str = Field(...)
-    message: str = Field(..., min_length=8)
+    message: str = Field(...)
 
     class Config:
         json_schema_extra = {
