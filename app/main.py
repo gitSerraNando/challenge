@@ -3,6 +3,12 @@ from typing import Union
 from fastapi import FastAPI
 from app.auth.routers import auth
 from db.database import Base, engine
+from fastapi.middleware.cors import CORSMiddleware
+
+origins = [
+    "http://localhost",
+    "http://localhost:8000",
+]
 
 description = """
 Celes API  Challenge. 🚀
@@ -29,6 +35,13 @@ app = FastAPI(
     },
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(auth.router)
 
