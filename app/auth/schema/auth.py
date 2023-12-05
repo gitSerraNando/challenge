@@ -2,8 +2,8 @@ from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 
 class Login(BaseModel):
-    email: EmailStr = Field(..., example="user@example.com")
-    password: str = Field(..., min_length=8, example="yourpassword")
+    email: EmailStr = Field(...)
+    password: str = Field(..., min_length=8)
 
     class Config:
         json_schema_extra = {
@@ -14,8 +14,8 @@ class Login(BaseModel):
         }
 
 class Token(BaseModel):
-    access_token: str = Field(..., example="eyJhbGciOiJIUzI1NiIsIn...")
-    token_type: str = Field(default="bearer", example="bearer")
+    access_token: str = Field(...)
+    token_type: str = Field(default="bearer")
 
     class Config:
         json_schema_extra = {
@@ -26,8 +26,8 @@ class Token(BaseModel):
         }
 
 class TokenData(BaseModel):
-    email: Optional[EmailStr] = Field(default=None, example="user@example.com")
-    user_type: Optional[str] = Field(default=None, example="admin")
+    email: Optional[EmailStr] = Field(default=None)
+    user_type: Optional[str] = Field(default=None)
 
     class Config:
         json_schema_extra = {
@@ -38,8 +38,8 @@ class TokenData(BaseModel):
         }
 
 class TokenResponse(BaseModel):
-    access_token: str = Field(..., example="eyJhbGciOiJIUzI1NiIsIn...")
-    token_type: str = Field(default="bearer", example="bearer")
+    access_token: str = Field(...)
+    token_type: str = Field(default="bearer")
 
     class Config:
         from_attributes = True
