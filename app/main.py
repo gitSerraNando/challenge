@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.auth.routers import auth
+from app.employee.routers import employee
 from app.monitor.repository.monitor import MonitorService
 from app.monitor.schema.monitor import LogCreate, LogsType
 from db.database import Base, engine, SessionLocal
@@ -64,3 +65,4 @@ async def log_requests_responses(request: Request, call_next):
 
 
 app.include_router(auth.router)
+app.include_router(employee.router)

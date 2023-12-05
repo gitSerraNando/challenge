@@ -10,6 +10,7 @@ class Settings:
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(
         os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES'))
+    GOOGLE_APPLICATION_CREDENTIALS: str = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
 
 
 settings = Settings()
