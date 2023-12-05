@@ -1,9 +1,11 @@
-import jwt
 from datetime import datetime, timedelta
+
+import jwt
 from jwt import ExpiredSignatureError, InvalidTokenError, PyJWTError
+
 from app.auth.schema.auth import TokenData
-from core.config import settings
 from app.user.repository.user import UserService
+from core.config import settings
 
 
 class JWTService:

@@ -1,7 +1,8 @@
+from datetime import datetime
+
+from sqlalchemy import Column, Integer, String, DateTime
 
 from db.database import Base
-from sqlalchemy import Column, Integer, String, DateTime
-from datetime import datetime
 
 
 class User(Base):
@@ -11,7 +12,7 @@ class User(Base):
     first_name = Column(String, index=True)
     last_name = Column(String, index=True)
     password = Column(String)
-    grant_type=Column(String, default="password")
-    user_type= Column(String, default="default")
+    grant_type = Column(String, default="password")
+    user_type = Column(String, default="default")
     created_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)

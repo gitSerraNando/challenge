@@ -1,5 +1,7 @@
 import pytest
+
 from app.utils.hashing import Hash
+
 
 class TestHash:
     @pytest.fixture(scope="class")

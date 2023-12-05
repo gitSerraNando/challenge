@@ -140,3 +140,4 @@ poetry.lock
 # Logs
 logs/
 *.log
+*.db

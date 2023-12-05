@@ -1,27 +1,25 @@
 import pytest
-from datetime import datetime, timedelta
-from app.utils.token import JWTService, TokenData
-from logging import raiseExceptions
-import pytest
+from fastapi import HTTPException, status
+
 from app.user.repository.user import UserService
 from app.user.schema.user import UserCreate
 from app.utils.hashing import Hash
-from sqlalchemy.exc import IntegrityError
-from fastapi import HTTPException, status
-
+from app.utils.token import JWTService, TokenData
 
 TEST_EMAIL = "test@example.com"
+
 
 class MockDB:
     def __init__(self):
         self.users = []
+
     def add(self, user):
         self.users.append(user)
 
     def commit(self):
         pass
 
-    def refresh(self,user):
+    def refresh(self, user):
         self.users.append(user)
 
     def rollback(self):
@@ -33,11 +31,13 @@ class MockDB:
 
         def filter(self, *filters):
             # Implementación simplificada del filtro
-            filtered_users = [user for user in self.users if all(getattr(user, str(arg.left).split('.')[1]) == arg.right for arg in filters)]
+            filtered_users = [user for user in self.users if
+                              all(getattr(user, str(arg.left).split('.')[1]) == arg.right for arg in filters)]
             return MockFilterQuery(filtered_users)
 
         def filter_by(self, **kwargs):
-            filtered_users = [user for user in self.users if all(getattr(user, key) == value for key, value in kwargs.items())]
+            filtered_users = [user for user in self.users if
+                              all(getattr(user, key) == value for key, value in kwargs.items())]
             return MockFilterQuery(filtered_users)
 
         def all(self):
@@ -46,6 +46,7 @@ class MockDB:
 
     def query(self, *args):
         return self.MockQuery(self.users)
+
 
 class MockFilterQuery:
     def __init__(self, filtered_users):
@@ -58,20 +59,19 @@ class MockFilterQuery:
         return self.filtered_users
 
 
-
-
 @pytest.fixture
 def user_repository():
     return UserService(MockDB())
+
 
 @pytest.fixture
 def jwt_service():
     return JWTService()
 
+
 @pytest.fixture
 def mock_db():
     return MockDB()
-
 
 
 def test_create_user_success(user_repository):
@@ -101,7 +101,6 @@ def test_create_user_success(user_repository):
     assert user.user_type == "Admin"
 
 
-
 def test_create_user_existing_email(user_repository):
     user_data = UserCreate(
         email=TEST_EMAIL,
@@ -115,6 +114,8 @@ def test_create_user_existing_email(user_repository):
         user_repository.create_user(user_data)
     assert e.value.status_code == status.HTTP_409_CONFLICT
     assert e.value.detail == "Email already registered."
+
+
 def test_create_access_token(jwt_service):
     data = {"sub": TEST_EMAIL, "user_type": "Admin"}
     token = jwt_service.create_access_token(data)
@@ -126,6 +127,7 @@ def test_verify_token_invalid(jwt_service, mock_db):
     with pytest.raises(ValueError):
         jwt_service.verify_token(token, ValueError, mock_db)
 
+
 def test_verify_basic_token_valid(jwt_service):
     data = {"sub": TEST_EMAIL, "user_type": "Admin"}
     token = jwt_service.create_access_token(data)
@@ -133,7 +135,6 @@ def test_verify_basic_token_valid(jwt_service):
     assert isinstance(token_data, TokenData)
     assert token_data.email == TEST_EMAIL
     assert token_data.user_type == "Admin"
-
 
 
 def test_verify_basic_token_invalid(jwt_service):

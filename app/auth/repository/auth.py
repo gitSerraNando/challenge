@@ -1,6 +1,8 @@
-from sqlalchemy.orm import Session
-from app.user import models
 from fastapi import HTTPException, status
+from sqlalchemy.orm import Session
+
+from app.monitor.repository.monitor import MonitorService
+from app.monitor.schema.monitor import LogCreate, LogsType
 from app.user.repository.user import UserService
 from app.utils.hashing import Hash
 from app.utils.token import JWTService
@@ -29,6 +31,10 @@ class AuthService:
         try:
             user = user_service.get_user_by_email(email=user_request.username)
         except HTTPException:
+            monitor_service = MonitorService(self.db)
+            log_data = LogCreate(level=LogsType.WARNING,
+                                 message=f"Detail: authenticate_user: user not found - Response: {status.HTTP_401_UNAUTHORIZED}")
+            monitor_service.create_log(log_data)
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=RESPONSE
@@ -40,6 +46,10 @@ class AuthService:
     def _verify_password(self, plain_password, hashed_password):
         hasher = Hash()
         if not hasher.verify_password(plain_password, hashed_password):
+            monitor_service = MonitorService(self.db)
+            log_data = LogCreate(level=LogsType.WARNING,
+                                 message=f"Detail: _verify_password :Incorrect user or password please retry - Response: {status.HTTP_401_UNAUTHORIZED}")
+            monitor_service.create_log(log_data)
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect user or password please retry!"

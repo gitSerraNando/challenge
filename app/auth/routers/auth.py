@@ -1,25 +1,26 @@
-from fastapi import APIRouter, Depends, status, Body, HTTPException
-from sqlalchemy.orm import Session
-from app.auth.schema.auth import TokenResponse
-from db.database import get_db
-from app.user.schema.user import UserCreate, UserResponse
-from app.user.repository.user import UserService
-from app.auth.repository.auth import AuthService
+from fastapi import APIRouter, Depends, status, Body
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+
+from app.auth.repository.auth import AuthService
+from app.auth.schema.auth import TokenResponse
+from app.user.repository.user import UserService
+from app.user.schema.user import UserCreate, UserResponse
+from db.database import get_db
 
 router = APIRouter(
     prefix="/auth",
     tags=["Auth"]
 )
 
+
 @router.post(
     '/signup',
     status_code=status.HTTP_201_CREATED,
     response_model=UserResponse,
     summary="Register a User",
-    include_in_schema=False
 )
-def signup(user_body: UserCreate = Body(...), db: Session = Depends(get_db)):
+async def signup(user_body: UserCreate = Body(...), db: Session = Depends(get_db)):
     """
     Register a new user.
 
@@ -31,6 +32,7 @@ def signup(user_body: UserCreate = Body(...), db: Session = Depends(get_db)):
     """
     user_service = UserService(db)
     return user_service.create_user(user_body)
+
 
 @router.post(
     '/login',

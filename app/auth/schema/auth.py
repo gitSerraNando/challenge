@@ -1,5 +1,7 @@
-from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
+
+from pydantic import BaseModel, EmailStr, Field
+
 
 class Login(BaseModel):
     email: EmailStr = Field(...)
@@ -13,6 +15,7 @@ class Login(BaseModel):
             }
         }
 
+
 class Token(BaseModel):
     access_token: str = Field(...)
     token_type: str = Field(default="bearer")
@@ -25,6 +28,7 @@ class Token(BaseModel):
             }
         }
 
+
 class TokenData(BaseModel):
     email: Optional[EmailStr] = Field(default=None)
     user_type: Optional[str] = Field(default=None)
@@ -36,6 +40,7 @@ class TokenData(BaseModel):
                 "user_type": "admin"
             }
         }
+
 
 class TokenResponse(BaseModel):
     access_token: str = Field(...)

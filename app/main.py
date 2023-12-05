@@ -1,9 +1,10 @@
-from typing import Union
-
-from fastapi import FastAPI
-from app.auth.routers import auth
-from db.database import Base, engine
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+
+from app.auth.routers import auth
+from app.monitor.repository.monitor import MonitorService
+from app.monitor.schema.monitor import LogCreate, LogsType
+from db.database import Base, engine, SessionLocal
 
 origins = [
     "http://localhost",
@@ -17,6 +18,7 @@ Celes API  Challenge. 🚀
 ## Datamart:
 
 """
+
 
 def create_database():
     Base.metadata.create_all(bind=engine)
@@ -43,6 +45,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def log_requests_responses(request: Request, call_next):
+    response = await call_next(request)
+    db = SessionLocal()
+    try:
+        monitor_service = MonitorService(db)
+        log_data = LogCreate(
+            level=LogsType.INFO.value,
+            message=f"Request: {request.url} - Response: {response.status_code}"
+        )
+        monitor_service.create_log(log_data)
+        db.commit()
+    finally:
+        db.close()
+    return response
+
+
 app.include_router(auth.router)
-
-

@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
 
+
 class UserBase(BaseModel):
     email: EmailStr = Field(...)
 
@@ -10,6 +11,7 @@ class UserBase(BaseModel):
                 "email": "test@dominio.com"
             }
         }
+
 
 class User(UserBase):
     first_name: str = Field(..., min_length=1, max_length=50)
@@ -24,6 +26,7 @@ class User(UserBase):
             }
         }
 
+
 class UserCreate(User):
     password: str = Field(..., min_length=8, max_length=60)
     user_type: str = Field(...)
@@ -36,6 +39,7 @@ class UserCreate(User):
                 "user_type": "Admin"
             }
         }
+
 
 class UserResponse(BaseModel):
     id: int
