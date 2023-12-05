@@ -1,7 +1,7 @@
 from typing import Union
 
 from fastapi import FastAPI
-from app.auth.repository.auth import auth_user
+from app.auth.routers import auth
 from db.database import Base, engine
 
 def create_database():
@@ -12,7 +12,7 @@ create_database()
 
 app = FastAPI()
 
-app.include_router(auth_user.router)
+app.include_router(auth.router)
 
 
 @app.get("/")
