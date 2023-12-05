@@ -141,3 +141,4 @@ poetry.lock
 logs/
 *.log
 *.db
+google/*
