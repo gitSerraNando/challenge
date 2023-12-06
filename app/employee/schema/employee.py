@@ -1,19 +1,16 @@
 from pydantic import BaseModel, EmailStr, Field
-
+from typing import Optional
 
 
 class EmployeeResponse(BaseModel):
     KeyEmployee: str
     KeyDate: str
     KeySale: str
-    KeyCurrency: str
+    KeyCurrency: Optional[str]
     Qty: float
     Amount: float
     CostAmount: float
     DiscAmount: float
-
-
-
 
     class Config:
         from_attributes = True
@@ -27,6 +24,24 @@ class EmployeeResponse(BaseModel):
                 "Amount": 5800.0,
                 "CostAmount": 2717.16,
                 "DiscAmount": 0.0,
+
+
+            }
+        }
+
+
+class SalesSummary(BaseModel):
+    KeyEmployee: str
+    TotalSales: float
+    AverageSales: float
+
+    class Config:
+        from_attributes = True
+        json_schema_extra = {
+            "example": {
+                "KeyEmployee": "17585",
+                "TotalSales": 5800,
+                "AverageSales": 5800.0,
 
 
             }

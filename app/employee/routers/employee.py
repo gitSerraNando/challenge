@@ -4,9 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.employee.repository.employee import EmployeeService
-from app.employee.schema.employee import EmployeeResponse
+from app.employee.schema.employee import EmployeeResponse, SalesSummary
 from app.monitor.repository.monitor import MonitorService
 from app.monitor.schema.monitor import LogCreate, LogsType
+from app.user.models import User
+from app.utils.oauth import get_current_user
 from db.database import get_db
 from fastapi_pagination import Page, paginate, add_pagination
 
@@ -26,7 +28,8 @@ async def sales_per_employee(
         start_date: date = Query(..., example="2023-11-29"),
         end_date: date = Query(..., example="2023-11-30"),
         db: Session = Depends(get_db),
-        monitor_service: MonitorService = Depends(get_monitor_service)
+        monitor_service: MonitorService = Depends(get_monitor_service),
+        current_user: User = Depends(get_current_user)
 ):
     """
     Retrieve the sales per employee within a specified date range.
@@ -43,5 +46,22 @@ async def sales_per_employee(
     """
     employee_service = EmployeeService(db, monitor_service)
     results = employee_service.sales_per_employee(
-        key_employee, start_date, end_date)
+        key_employee, start_date, end_date, current_user)
     return paginate(results)
+
+
+@router.get("/sales-summary/", response_model=SalesSummary)
+def read_sales_summary(  key_employee: str = Query(..., example="17585"),db: Session = Depends(get_db), current_user: User = Depends(get_current_user),monitor_service: MonitorService = Depends(get_monitor_service),):
+    """
+    Retrieve the sales summary for the current user.
+
+    Parameters:
+    - db (Session): The database session.
+    - current_user (User): The current user.
+    - monitor_service (MonitorService): The monitor service.
+
+    Returns:
+    - SalesSummary: The sales summary for the current user.
+    """
+    employee_service = EmployeeService(db, monitor_service)
+    return employee_service.get_sales_summary(current_user, key_employee)
