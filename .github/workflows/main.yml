@@ -1,0 +1,48 @@
+name: CI/CD Workflow
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      SQLALCHEMY_DATABASE_URL: ${{ secrets.SQLALCHEMY_DATABASE_URL }}
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}
+      GOOGLE_APPLICATION_CREDENTIALS: 'google/mide-lo-que-importa-279017-597087d55355.json'
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.10'
+
+    - name: Install Poetry
+      run: |
+        pip install poetry
+
+    - name: Configure Poetry
+      run: |
+        poetry config virtualenvs.create false
+
+    - name: Install dependencies
+      run: |
+        poetry install --no-dev
+
+    - name: List directory contents antes
+      run: |
+          ls -la
+    - name: Decode Google Cloud Credentials
+      run: |
+        echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" | base64 -d > $GOOGLE_APPLICATION_CREDENTIALS
+
+
+    - name: Show path of credentials file
+      run: |
+        echo "Credentials file path: $GOOGLE_APPLICATION_CREDENTIALS"
+
+    - name: Run tests
+      run: |
+        poetry run pytest
