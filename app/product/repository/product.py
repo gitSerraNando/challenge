@@ -6,25 +6,25 @@ from google.api_core.exceptions import GoogleAPIError
 from google.cloud import bigquery
 from sqlalchemy.orm import Session
 
-from app.employee.schema.employee import EmployeeResponse, SalesSummary
 from app.monitor.repository.monitor import MonitorService
 from app.monitor.schema.monitor import LogCreate, LogsType
+from app.product.schema.product import ProductResponse, SalesSummary
 from app.user.models import User
 from db.database import client
 
 
-class EmployeeService:
+class ProductService:
     def __init__(self, db: Session, monitor_service: MonitorService):
         self.db = db
         self.monitor_service = monitor_service
 
-    def sales_per_employee(self, key_employee: str, start_date: date, end_date: date, current_user: User) -> List[
-        EmployeeResponse]:
+    def sales_per_product(self, key_product: str, start_date: date, end_date: date, current_user: User) -> List[
+        ProductResponse]:
         if 'Admin' in current_user.user_type:
             if start_date > end_date:
                 log_data = LogCreate(
                     level=LogsType.WARNING,
-                    message=f"Detail: sales_per_employee :The start date must be before the end date - Response: {status.HTTP_400_BAD_REQUEST}")
+                    message=f"Detail: sales_per_product :The start date must be before the end date - Response: {status.HTTP_400_BAD_REQUEST}")
                 self.monitor_service.create_log(log_data)
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -32,15 +32,15 @@ class EmployeeService:
                 )
 
             query = """
-                SELECT KeyEmployee, KeyDate, KeySale, Qty, Amount, CostAmount, DiscAmount
-                FROM `mide-lo-que-importa-279017.celes.sales_view_by_employee`
-                WHERE KeyEmployee = @key_employee AND
+                SELECT KeyProduct, KeyDate, KeySale, Qty, Amount, CostAmount, DiscAmount
+                FROM `mide-lo-que-importa-279017.celes.sales_view_by_product`
+                WHERE KeyProduct = @key_product AND
                     KeyDate BETWEEN @start_date AND @end_date
             """
             job_config = bigquery.QueryJobConfig(
                 query_parameters=[
                     bigquery.ScalarQueryParameter(
-                        "key_employee", "STRING", key_employee),
+                        "key_product", "STRING", key_product),
                     bigquery.ScalarQueryParameter(
                         "start_date", "DATE", start_date),
                     bigquery.ScalarQueryParameter("end_date", "DATE", end_date)
@@ -53,7 +53,7 @@ class EmployeeService:
                 response_data = []
                 for row in results:
                     row_data = {
-                        "KeyEmployee": row.KeyEmployee,
+                        "KeyProduct": row.KeyProduct,
                         "KeyDate": row.KeyDate.strftime('%Y-%m-%d') if row.KeyDate else None,
                         "KeySale": row.KeySale,
                         "KeyCurrency": row.get('KeyCurrency', '1|COP'),
@@ -91,34 +91,34 @@ class EmployeeService:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You do not have permission to view this information!")
 
-    def get_sales_summary(self, current_user: User, key_employee: str) -> List[SalesSummary]:
+    def get_sales_summary(self, current_user: User, key_product: str) -> List[SalesSummary]:
         if 'Admin' in current_user.user_type:
             query = """
-                    SELECT * FROM `mide-lo-que-importa-279017.celes.total_and_average_sales_per_employee`
-                    WHERE KeyEmployee = @key_employee
+                    SELECT * FROM `mide-lo-que-importa-279017.celes.total_and_average_sales_per_product`
+                    WHERE KeyProduct = @key_product
                 """
             job_config = bigquery.QueryJobConfig(
                 query_parameters=[
                     bigquery.ScalarQueryParameter(
-                        "key_employee", "STRING", key_employee)], )
+                        "key_product", "STRING", key_product)], )
             query_job = client.query(query, job_config=job_config)
             try:
                 result = next(query_job.result(), None)
                 if result:
                     return SalesSummary(
-                        KeyEmployee=result.KeyEmployee,
+                        KeyProduct=result.KeyProduct,
                         TotalSales=result.TotalSales,
-                        AverageSales=result.AverageSales,
+                        AverageSales=result.AverageSales
 
                     )
                 else:
                     log_data = LogCreate(
                         level=LogsType.WARNING,
-                        message=f"Detail: No sales summary found for the specified employee - Response: {status.HTTP_404_NOT_FOUND}")
+                        message=f"Detail: No sales summary found for the specified product - Response: {status.HTTP_404_NOT_FOUND}")
                     self.monitor_service.create_log(log_data)
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
-                        detail="No sales summary found for the specified employee."
+                        detail="No sales summary found for the specified product."
                     )
             except GoogleAPIError as e:
                 log_data = LogCreate(level=LogsType.ERROR,
