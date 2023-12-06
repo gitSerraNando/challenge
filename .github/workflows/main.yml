@@ -31,14 +31,11 @@ jobs:
       run: |
         poetry install --no-dev
 
-    - name: List directory contents antes
-      run: |
-          ls -la
+
     - name: Decode Google Cloud Credentials
       run: |
-        echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" | base64 -d > $GOOGLE_APPLICATION_CREDENTIALS
-
-
+          echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" | base64 -d > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+      
     - name: Show path of credentials file
       run: |
         echo "Credentials file path: $GOOGLE_APPLICATION_CREDENTIALS"
@@ -46,3 +43,49 @@ jobs:
     - name: Run tests
       run: |
         poetry run pytest
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+      IMAGE: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/callenge/challenge:${{ github.sha }}
+      SERVICE_NAME: challenge-service
+      REGION: us-central1
+
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - id: 'auth'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+    - name: Extract filename
+      run: |
+          FILENAME=$(basename $GOOGLE_APPLICATION_CREDENTIALS)
+          echo "FILENAME=$FILENAME" >> $GITHUB_ENV      
+     
+
+    - name: Configure Docker to use the gcloud command-line tool as a credential helper
+      run: |
+          gcloud auth configure-docker \
+          us-central1-docker.pkg.dev -q
+
+    - name: Build and push Docker image
+      run: |
+        docker build -t ${{ env.IMAGE }} .
+        docker push ${{ env.IMAGE }}
+
+    - name: Deploy to Google Cloud Run
+      run: |
+        gcloud run deploy ${{ env.SERVICE_NAME }} \
+        --image ${{ env.IMAGE }} \
+        --platform managed \
+        --region ${{ env.REGION }} \
+        --allow-unauthenticated \
+        --set-env-vars SQLALCHEMY_DATABASE_URL=${{ secrets.SQLALCHEMY_DATABASE_URL }},SECRET_KEY=${{ secrets.SECRET_KEY }},ACCESS_TOKEN_EXPIRE_MINUTES=${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }},GOOGLE_APPLICATION_CREDENTIALS=$FILENAME
+    
+    

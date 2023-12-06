@@ -13,6 +13,6 @@ class User(Base):
     last_name = Column(String, index=True)
     password = Column(String)
     grant_type = Column(String, default="password")
-    user_type = Column(String, default="default")
+    user_type = Column(String, default="Admin")
     created_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)

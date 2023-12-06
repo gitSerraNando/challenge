@@ -27,14 +27,21 @@ class User(UserBase):
         }
 
 
-class UserCreate(User):
+class UserCreate(BaseModel):
+    first_name: str = Field(..., min_length=1, max_length=50)
+    last_name: str = Field(..., min_length=1, max_length=50)
+    email: EmailStr = Field(...)
     password: str = Field(..., min_length=8, max_length=60)
     user_type: str = Field(...)
+
 
     class Config:
         from_attributes = True
         json_schema_extra = {
             "example": {
+                "first_name": "Hernando",
+                "last_name": "Escobar",
+                "email": "test@gmail.com",
                 "password": "12345678",
                 "user_type": "Admin"
             }
